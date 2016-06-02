@@ -8,7 +8,7 @@ Run `make` in the folder. No really, that's it.
 
 ## Executing
 
-Run `./lgtv --device=<device> [OPTIONS]`. If you do not get any output from this command, it means no TV is connected to the selected serial port. If a compatible TV is connected, you should see a `X 01 NGSSx` reply, where SS is the Set ID (in Hexadecimal) of your television
+Run `./lgtv --device=<device> [OPTIONS] [COMMAND]`. If you do not get any output from this command, it means no TV is connected to the selected serial port. If a compatible TV is connected, you should see a `X 01 NGSSx` reply, where SS is the Set ID (in Hexadecimal) of your television
 
 ### Options
 
