@@ -36,3 +36,5 @@ Run `./lgtv --device=<device> [OPTIONS] [COMMAND]`. If you do not get any output
 |volume-mute     |&lt;none&gt;                                        |Get volume mute (on/off)              |
 |volume-mute     |on, off                                             |Set volume mute (on/off)              |
 |mute            |&lt;none&gt;, on, off                               |Same as volume mute                   |
+|volume          |&lt;none&gt;                                        |Get TV Volume                         |
+|volume          |0-100                                               |Set TV Volume to specified value      |

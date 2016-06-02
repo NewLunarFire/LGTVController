@@ -15,6 +15,7 @@
 #define LGTV_SCREENMUTE_COMMAND 3
 #define LGTV_MUTE_COMMAND 4
 #define LGTV_VOLUMEMUTE_COMMAND 5
+#define LGTV_VOLUME_COMMAND 6
 #define LGTV_UNKNOWN_COMMAND -1
 
 int set_interface_attribs(int fd, int speed, int data_bits, int parity, int stop_bits);

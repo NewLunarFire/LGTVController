@@ -14,7 +14,8 @@ char* tv_commands[] = {
   "aspect",
   "screen-mute",
   "mute",
-  "volume-mute"
+  "volume-mute",
+  "volume"
 };
 
 char tv_command_letters[][2] = {
@@ -23,7 +24,8 @@ char tv_command_letters[][2] = {
   {'k', 'c'},
   {'k', 'd'},
   {'k', 'e'},
-  {'k', 'e'}
+  {'k', 'e'},
+  {'k', 'f'}
 };
 
 char* tv_inputs[] = {
@@ -50,7 +52,7 @@ int getNumber(char* string, int min, int max)
 
   if(string == endptr)
       //Conversion impossible
-      return -1;
+      return 0xFF;
 
   if(number > max)
     return max;
@@ -144,6 +146,7 @@ int main(int argc, char *argv[])
         {
           case LGTV_POWER_COMMAND:
           case LGTV_SCREENMUTE_COMMAND:
+            //On/Off, Off = 0, On = 1
             if(strcmp(argv[optind], "on") == 0)
               data = 0x01;
             else if(strcmp(argv[optind], "off") == 0)
@@ -151,16 +154,22 @@ int main(int argc, char *argv[])
             break;
           case LGTV_MUTE_COMMAND:
           case LGTV_VOLUMEMUTE_COMMAND:
-              if(strcmp(argv[optind], "on") == 0)
-                data = 0x00;
-              else if(strcmp(argv[optind], "off") == 0)
-                data = 0x01;
-              break;
+            //On/Off, Off = 1, On = 0
+            if(strcmp(argv[optind], "on") == 0)
+              data = 0x00;
+            else if(strcmp(argv[optind], "off") == 0)
+              data = 0x01;
+            break;
           case LGTV_INPUT_COMMAND:
+            //Values for Input command
             data = findStringIndex(argv[optind], tv_inputs, sizeof(tv_inputs));
             break;
-          case  LGTV_ASPECT_COMMAND:
+          case LGTV_ASPECT_COMMAND:
+            //Values for Aspect command
             data = findStringIndex(argv[optind], tv_aspects, sizeof(tv_aspects));
+            break;
+          case LGTV_VOLUME_COMMAND:
+            data = getNumber(argv[optind], 0, 100);
             break;
         }
       }
@@ -186,16 +195,18 @@ int main(int argc, char *argv[])
     printf(" aspect\t\t\tGet Aspect Ratio of TV\n");
     printf(" aspect <type>\t\tSet Aspect Ratio to (normal|wide|horizon|zoom)\n");
     printf(" screen-mute \t\tGet screen mute state (on/off)\n");
-    printf(" screen-mute on/off\t\tSet screen mute on/off\n");
-    printf(" volume-mute \t\tGet volume mute state (on/off)\n");
-    printf(" volume-mute on/off\t\tSet volume mute on/off\n");
-    printf(" mute \t\tSame as volume mute\n");
+    printf(" screen-mute on/off\tSet screen mute on/off\n");
+    printf(" volume-mute\t\tGet volume mute state (on/off)\n");
+    printf(" volume-mute on/off\tSet volume mute on/off\n");
+    printf(" mute\t\t\tSame as volume mute\n");
+    printf(" volume\t\t\tGet TV volume\n");
+    printf(" volume 0-100\t\tSet TV volume to value\n");
     printf("\n");
     return 0;
   }
   else if(device == NULL)
   {
-    printf("Error: No device specified\nSpecify a device with -d or --device");
+    printf("Error: No device specified\nSpecify a device with -d or --device\n");
     return 1;
   }
 
