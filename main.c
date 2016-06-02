@@ -4,139 +4,67 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <termios.h>
 #include <unistd.h>
 
-#define ANSI_COLOR_RED     "\x1b[31m"
-#define ANSI_COLOR_GREEN   "\x1b[32m"
-#define ANSI_COLOR_YELLOW  "\x1b[33m"
-#define ANSI_COLOR_BLUE    "\x1b[34m"
-#define ANSI_COLOR_MAGENTA "\x1b[35m"
-#define ANSI_COLOR_CYAN    "\x1b[36m"
-#define ANSI_COLOR_RESET   "\x1b[0m"
+#include "main.h"
 
-struct tv_command
-{
-  char op1;
-  char op2;
-  int data;
+char* tv_commands[] = {
+  "power",
+  "input",
+  "aspect"
 };
 
-struct cli_command
-{
-  char* name;
-  struct tv_command tvcmd;
+char tv_command_letters[][2] = {
+  {'k', 'a'},
+  {'k', 'b'},
+  {'k', 'c'}
 };
 
-struct cli_command cmds[] = {
-  {"power-on", {'k', 'a', 1}},
-  {"power-off", {'k', 'a', 0}},
-  {"tv", {'k', 'b', 0}},
-  {"video1", {'k', 'b', 1}},
-  {"video2", {'k', 'b', 2}},
-  {"component1", {'k', 'b', 3}},
-  {"component2", {'k', 'b', 4}},
-  {"rgb", {'k', 'b', 5}},
-  {"dvi", {'k', 'b', 6}}
+char* tv_inputs[] = {
+  "tv",
+  "video1",
+  "video2",
+  "component1",
+  "component2",
+  "rgb",
+  "dvi"
 };
 
-void send(int fd, char op1, char op2, unsigned int sid, unsigned int data)
+char* tv_aspects[] = {
+  "normal",
+  "wide",
+  "horizon",
+  "zoom"
+};
+
+int getNumber(char* string, int min, int max)
 {
-  char command[9];
-  sprintf(command, "%c%c %02X %02X\r", op1, op2, sid & 0xFF, data & 0xFF);
-  write(fd, command, 9);
+  char* endptr;
+  int number = strtol(string, &endptr, 10);
+
+  if(string == endptr)
+      //Conversion impossible
+      return -1;
+
+  if(number > max)
+    return max;
+  else if(number < min)
+    return min;
+
+  return number;
 }
 
-int set_interface_attribs(int fd, int speed, int data_bits, int parity, int stop_bits)
+int findStringIndex(char* string, char** collection, int size)
 {
-  struct termios tty;
-  memset(&tty, 0, sizeof(tty));
+  int r = -1;
 
-  if(tcgetattr(fd, &tty) != 0)
+  for(int i = 0; (i < size) && (r == -1); i++)
   {
-    printf("error %d from tcgetattr: %s\n", errno, strerror(errno));
-    return -1;
+    if(strcmp(string, collection[i]) == 0)
+      r = i;
   }
 
-  //Set Data Bits
-  tty.c_cflag &= ~CSIZE;
-  switch(data_bits)
-  {
-    case 5:
-      tty.c_cflag |= CS5;
-      break;
-    case 6:
-      tty.c_cflag |= CS6;
-      break;
-    case 7:
-      tty.c_cflag |= CS7;
-      break;
-    case 8:
-    default:
-    tty.c_cflag |= CS8;
-      break;
-  }
-
-  //Set Parity
-  switch(parity)
-  {
-    //No Parity
-    case 'N':
-    case 'n':
-    default:
-      tty.c_cflag &= ~(PARENB|PARODD|CMSPAR);
-      break;
-    //Even Parity
-    case 'E':
-    case 'e':
-      tty.c_cflag |= PARENB;
-      tty.c_cflag &= ~(PARODD|CMSPAR);
-      break;
-    //Odd Parity
-    case 'O':
-    case 'o':
-      tty.c_cflag |= PARENB|PARODD;
-      tty.c_cflag &= ~CMSPAR;
-      break;
-    //Mark Parity
-    case 'M':
-    case 'm':
-      tty.c_cflag |= PARENB|PARODD|CMSPAR;
-      break;
-    //Space Parity
-    case 'S':
-    case 's':
-      tty.c_cflag |= PARENB|CMSPAR;
-      tty.c_cflag &= ~PARODD;
-      break;
-  }
-
-  if(stop_bits == 2)
-    //2 Stop Bits
-    tty.c_cflag |= CSTOPB;
-  else
-    //1 Stop Bit
-    tty.c_cflag &= ~CSTOPB;
-
-  //Set Non-canocial Read
-  cfmakeraw(&tty);
-
-  //Set to speed
-  cfsetspeed(&tty, speed);
-
-  tty.c_lflag = 0; // no signaling chars, no echo, no canonical processing
-  tty.c_oflag = 0; // no remapping, no delays
-  tty.c_cc[VMIN] = 0; // read doesn't block
-  tty.c_cc[VTIME] = 5; // 0.5 seconds read timeout
-
-  /* Flush Port, then applies attributes */
-  tcflush(fd, TCIFLUSH);
-
-  if(tcsetattr (fd, TCSANOW, &tty ) != 0)
-  {
-    printf("error %d from tcsetattr: %s\n", errno, strerror(errno));
-    return -1;
-  }
+  return r;
 }
 
 int main(int argc, char *argv[])
@@ -148,11 +76,11 @@ int main(int argc, char *argv[])
   char op[] = {'k', 'x'};
   int sid = 0;
   int data = 0xFF;
+  char command[9];
 
   int help = 0, echo = 0;
 
   static struct option long_options[] = {
-    {"command", required_argument, 0, 'c'},
     {"device", required_argument, 0, 'd'},
     {"echo", no_argument, 0, 'e'},
     {"help", no_argument, 0, 'h'},
@@ -160,44 +88,17 @@ int main(int argc, char *argv[])
     {0, 0, 0, 0}
   };
 
-   /* getopt_long stores the option index here. */
-   do {
-     c = getopt_long (argc, argv, "d:", long_options, &option_index);
+  /* getopt_long stores the option index here. */
+  do {
+    c = getopt_long (argc, argv, "d:ehs:", long_options, &option_index);
 
-     switch(c)
-     {
+    switch(c)
+    {
       case -1:
         //Do nothing, will exit loop
         break;
       case 0:
         //Do nothing
-        break;
-      case 'c':
-        for(int i = 0; i < sizeof(cmds); i++)
-        {
-            if(strcmp(cmds[i].name, optarg) == 0)
-            {
-              op[0] = cmds[i].tvcmd.op1;
-              op[1] = cmds[i].tvcmd.op2;
-              data = cmds[i].tvcmd.data;
-              break;
-            }
-        }
-        //Command
-        if(strcmp("power-on", optarg) == 0)
-        {
-          //Power-On TV
-          op[0] = 'k';
-          op[1] = 'a';
-          data = 1;
-        }
-        else if(strcmp("power-off", optarg) == 0)
-        {
-          //Power-Off TV
-          op[0] = 'k';
-          op[1] = 'a';
-          data = 0;
-        }
         break;
       case 'd':
         //Specified Device
@@ -214,43 +115,71 @@ int main(int argc, char *argv[])
         sid = atoi(optarg);
         break;
       case '?':
-          /* getopt_long already printed an error message. */
+        /* getopt_long already printed an error message. */
         break;
       default:
         return 1;
-     }
-   } while(c != -1);
+    }
+  } while(c != -1);
 
-   if(help != 0)
-   {
-    printf("Usage: lgtv [OPTIONS]\n");
+  if(optind < argc)
+  {
+    int cmd = -1;
+    cmd = findStringIndex(argv[optind], tv_commands, sizeof(tv_commands));
+
+    if(cmd != -1)
+    {
+      op[0] = tv_command_letters[cmd][0];
+      op[1] = tv_command_letters[cmd][1];
+
+      if(++optind < argc)
+      {
+        //2nd Arguments (Command + Value)
+        switch(cmd)
+        {
+          case LGTV_POWER_COMMAND:
+            if(strcmp(argv[optind], "on") == 0)
+              data = 0x01;
+            else if(strcmp(argv[optind], "off") == 0)
+              data = 0x00;
+            break;
+          case LGTV_INPUT_COMMAND:
+            data = findStringIndex(argv[optind], tv_inputs, sizeof(tv_inputs));
+            break;
+          case  LGTV_ASPECT_COMMAND:
+            data = findStringIndex(argv[optind], tv_aspects, sizeof(tv_aspects));
+        }
+      }
+    }
+  }
+
+  if(help != 0)
+  {
+    //Print Help message
+    printf("Usage: lgtv [OPTIONS] [COMMAND]\n");
     printf("LG TV Serial Controller, by Tommy Savaria (c)2016\n");
-    printf("\nMandatory options\n");
-    printf(" -d, --device\tSpecify device to connect\n");
+    printf("\nMandatory arguments\n");
+    printf(" -d, --device\t\tSpecify device to connect\n");
     printf("\nOptional arguments\n");
     printf(" -e --echo\t\tEcho command sent to TV\n");
     printf(" -h --help\t\tPrint help screen (this)\n");
     printf(" -s --setid [Set ID]\tSpecify Set ID of television\n");
-    printf(" -c --command [Command]\tRun Command\n");
-    printf("\nList of commands (after --command option)\n");
-    printf(" power-on\tTurn On television\n");
-    printf(" power-off\tTurn Off television\n");
-    printf(" tv\t\tSet Input to TV (Cable)\n");
-    printf(" video1\t\tSet Input to Video 1\n");
-    printf(" video2\t\tSet Input to Video 2\n");
-    printf(" component1\tSet Input to Component 1\n");
-    printf(" component2\tSet Input to Component 2\n");
-    printf(" rgb\t\tSet Input to RGB (VGA)\n");
-    printf(" dvi\t\tSet Input to DVI\n");
+    printf("\nCommands\n");
+    printf(" power\t\t\tGet power state (on/off)\n");
+    printf(" power on\t\tTurn On television\n");
+    printf(" power off\t\tTurn Off television\n");
+    printf(" input\t\t\tGet current TV input\n");
+    printf(" input <source>\t\tSet TV input to (tv|video1|video2|component1|component2|rgb|dvi)\n");
+    printf(" aspect\t\t\tGet Aspect Ratio of TV\n");
+    printf(" aspect <type>\t\tSet Aspect Ratio to (normal|wide|horizon|zoom)\n");
     printf("\n");
     return 0;
-   }
-   else if(device == NULL)
-   {
-
-     printf("Error: No device specified\nSpecify a device with -d or --device");
-     return 1;
-   }
+  }
+  else if(device == NULL)
+  {
+    printf("Error: No device specified\nSpecify a device with -d or --device");
+    return 1;
+  }
 
   int tty = open(device, O_RDWR);
 
@@ -260,15 +189,18 @@ int main(int argc, char *argv[])
     return -1;
   }
 
-  set_interface_attribs(tty, B9600, 8, 'N', 1);
+  set_interface_attribs(tty, 9600, 8, 'N', 1);
+
+  sprintf(command, "%.2s %02X %02X\r", op, sid & 0xFF, data & 0xFF);
+  write(tty, command, 9);
+
   if(echo != 0)
   {
+    //Print Send Command
     printf(ANSI_COLOR_GREEN);
-    printf("%c%c %02X %02X\\r\n", op[0], op[1], sid & 0xFF, data & 0xFF);
+    printf("%.9s\n", command);
     printf(ANSI_COLOR_RESET);
   }
-
-  send(tty, op[0], op[1], sid, data);
 
   if(tty == -1)
   {
@@ -280,7 +212,8 @@ int main(int argc, char *argv[])
 
   do {
     read(tty, &r, 1);
-    printf("%c", r);
+    if(r != -1)
+      printf("%c", r);
   } while(r != 'x');
 
   printf("\n");

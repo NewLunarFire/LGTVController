@@ -12,24 +12,22 @@ Run `./lgtv --device=<device> [OPTIONS]`. If you do not get any output from this
 
 ### Options
 
-| Short Option | Long Option | Argument | Description |
-|--------------|-------------|----------|-------------|
-|-e            |--echo       |None      |Echoes the data sent to your TV in the terminal. This can help you quickly see the commands sent to your TV             | 
-|-h            |--help       |None      |Shows an help screen for the appliation             |
-|-s            |--setid      |Set ID    |Sets the Set ID of the TV with which you want to communicate. If this is not set it defaults to 0, which is the all-call Set ID             |
-|-c            |--command      |Command    |See **__Commands__** Section Below            |
+| Short Option | Long Option  | Argument   | Description |
+|--------------|--------------|------------|-------------|
+|-d            |--device      |File Device |Selects the file device used to communicate with the TV           |
+|-e            |--echo        |None        |Echoes the data sent to your TV in the terminal. This can help you quickly see the commands sent to your TV             |
+|-h            |--help        |None      |Shows an help screen for the appliation             |
+|-s            |--setid       |Set ID    |Sets the Set ID of the TV with which you want to communicate. If this is not set it defaults to 0, which is the all-call Set ID             |
 
 ### Commands
 
-| Name     | Description             |
-|----------|-------------------------|
-|power-on  |Turn On television       |
-|power-off |Turn Off television      |
-|tv		     |Set Input to TV (Cable)  |
-|video1		 |Set Input to Video 1     |
-|video2		 |Set Input to Video 2     |
-|component1|Set Input to Component 1 |
-|component2|Set Input to Component 2 |
-|rgb		   |Set Input to RGB (VGA)   |
-|dvi		   |Set Input to DVI         |
 
+| Name           | Possible Values                                    | Description                          |
+|----------------|----------------------------------------------------|--------------------------------------|
+|&lt;none&gt;    |&lt;none&gt;                                        |Send invalid command to TV (identify) |
+|power           |&lt;none&gt;                                        |Get TV is powered on                  |
+|power           |on, off                                             |Power TV (On/Off)                     |
+|input  	       |&lt;none&gt;                                        |Get current input source              |
+|input  	       |tv, video1, video2, component1, component2, rgb, dvi|Select input source                   |
+|aspect          |&lt;none&gt;                                        |Get current aspect ratio              |
+|aspect          |normal, wide, horizon, zoom                         |Change aspect ratio                   |

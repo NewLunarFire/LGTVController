@@ -1,7 +1,8 @@
 CC=gcc
 CFLAGS=-Werror -pedantic -g
-SRC=main.c
+HEADERS=main.h
+SRC=main.c serial.c
 TARGET=lgtv
 
-all: $(SRC)
+all: $(SRC) $(HEADERS)
 	$(CC) $(CFLAGS) $(SRC) -o $(TARGET)
