@@ -11,13 +11,19 @@
 char* tv_commands[] = {
   "power",
   "input",
-  "aspect"
+  "aspect",
+  "screen-mute",
+  "mute",
+  "volume-mute"
 };
 
 char tv_command_letters[][2] = {
   {'k', 'a'},
   {'k', 'b'},
-  {'k', 'c'}
+  {'k', 'c'},
+  {'k', 'd'},
+  {'k', 'e'},
+  {'k', 'e'}
 };
 
 char* tv_inputs[] = {
@@ -124,8 +130,7 @@ int main(int argc, char *argv[])
 
   if(optind < argc)
   {
-    int cmd = -1;
-    cmd = findStringIndex(argv[optind], tv_commands, sizeof(tv_commands));
+    int cmd = findStringIndex(argv[optind], tv_commands, sizeof(tv_commands));
 
     if(cmd != -1)
     {
@@ -138,16 +143,25 @@ int main(int argc, char *argv[])
         switch(cmd)
         {
           case LGTV_POWER_COMMAND:
+          case LGTV_SCREENMUTE_COMMAND:
             if(strcmp(argv[optind], "on") == 0)
               data = 0x01;
             else if(strcmp(argv[optind], "off") == 0)
               data = 0x00;
             break;
+          case LGTV_MUTE_COMMAND:
+          case LGTV_VOLUMEMUTE_COMMAND:
+              if(strcmp(argv[optind], "on") == 0)
+                data = 0x00;
+              else if(strcmp(argv[optind], "off") == 0)
+                data = 0x01;
+              break;
           case LGTV_INPUT_COMMAND:
             data = findStringIndex(argv[optind], tv_inputs, sizeof(tv_inputs));
             break;
           case  LGTV_ASPECT_COMMAND:
             data = findStringIndex(argv[optind], tv_aspects, sizeof(tv_aspects));
+            break;
         }
       }
     }
@@ -166,12 +180,16 @@ int main(int argc, char *argv[])
     printf(" -s --setid [Set ID]\tSpecify Set ID of television\n");
     printf("\nCommands\n");
     printf(" power\t\t\tGet power state (on/off)\n");
-    printf(" power on\t\tTurn On television\n");
-    printf(" power off\t\tTurn Off television\n");
+    printf(" power on/off\t\tTurn on/off television\n");
     printf(" input\t\t\tGet current TV input\n");
     printf(" input <source>\t\tSet TV input to (tv|video1|video2|component1|component2|rgb|dvi)\n");
     printf(" aspect\t\t\tGet Aspect Ratio of TV\n");
     printf(" aspect <type>\t\tSet Aspect Ratio to (normal|wide|horizon|zoom)\n");
+    printf(" screen-mute \t\tGet screen mute state (on/off)\n");
+    printf(" screen-mute on/off\t\tSet screen mute on/off\n");
+    printf(" volume-mute \t\tGet volume mute state (on/off)\n");
+    printf(" volume-mute on/off\t\tSet volume mute on/off\n");
+    printf(" mute \t\tSame as volume mute\n");
     printf("\n");
     return 0;
   }

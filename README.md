@@ -22,7 +22,7 @@ Run `./lgtv --device=<device> [OPTIONS]`. If you do not get any output from this
 ### Commands
 
 
-| Name           | Possible Values                                    | Description                          |
+| Name           | Values                                             | Description                          |
 |----------------|----------------------------------------------------|--------------------------------------|
 |&lt;none&gt;    |&lt;none&gt;                                        |Send invalid command to TV (identify) |
 |power           |&lt;none&gt;                                        |Get TV is powered on                  |
@@ -31,3 +31,8 @@ Run `./lgtv --device=<device> [OPTIONS]`. If you do not get any output from this
 |input  	       |tv, video1, video2, component1, component2, rgb, dvi|Select input source                   |
 |aspect          |&lt;none&gt;                                        |Get current aspect ratio              |
 |aspect          |normal, wide, horizon, zoom                         |Change aspect ratio                   |
+|screen-mute     |&lt;none&gt;                                        |Get screen mute (on/off)              |
+|screen-mute     |on, off                                             |Set screen mute (on/off)              |
+|volume-mute     |&lt;none&gt;                                        |Get volume mute (on/off)              |
+|volume-mute     |on, off                                             |Set volume mute (on/off)              |
+|mute            |&lt;none&gt;, on, off                               |Same as volume mute                   |
